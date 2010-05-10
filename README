@@ -1,0 +1,60 @@
+CLILibraries
+
+Description:
+CLILibraries is a convenience set of libraries that allow to 
+create and compile CLI executable plugins for Slicer3 
+(www.slicer.org) using GenerateCLP without having to actually 
+link against Slicer3 or make it available through CMake.
+
+Usage:
+First compile CLILibraries using CMake (e.g. create a CLILibraries-build
+directory, cd into it and go ccmake ../CLILibraries). Once you're
+done, write a CMakeLists.txt for your plugin that follows the one below,
+and while configuring your project with CMake, just point CLILIBRARIES_DIR
+to the CLILibraries build directory (e.g. CLILibraries-build).
+After building, you should be able to run the executable for your plugin
+from the command line, or point Slicer3 to it and have it available
+from within the Slicer3 GUI.
+
+Here's a sample CMakeLists.txt for a MyPlugin plugin, typically consisting of 
+MyPlugin.cxx and MyPlugin.xml
+
+project(MyPlugin)
+
+cmake_minimum_required(VERSION 2.4)
+
+if(COMMAND cmake_policy)
+  cmake_policy(SET CMP0003 NEW)
+endif(COMMAND cmake_policy)
+
+set(CLILIBRARIES_DIR CLILIBRARIES_DIR-NOTFOUND CACHE PATH "Path to CLILibraries build directory")
+
+find_package(ITK REQUIRED)
+if(ITK_FOUND)
+  include(${ITK_USE_FILE})
+endif(ITK_FOUND)
+
+if(CLILIBRARIES_DIR)
+
+  set(TCLAP_DIR ${CLILIBRARIES_DIR}/tclap)
+  set(ModuleDescriptionParser_DIR ${CLILIBRARIES_DIR}/ModuleDescriptionParser)
+  set(GenerateCLP_DIR ${CLILIBRARIES_DIR}/GenerateCLP)
+  include(${CLILIBRARIES_DIR}/GenerateCLP/UseGenerateCLP.cmake)
+  #set(GENERATECLP_EXE ${CLILIBRARIES_DIR}/GenerateCLP/GenerateCLP)
+  find_file(GENERATECLP_EXE GenerateCLP ${CLILIBRARIES_DIR}/GenerateCLP/ ${CLILIBRARIES_DIR}/GenerateCLP/Debug ${CLILIBRARIES_DIR}/GenerateCLP/Release)
+
+  set(CLP MyPlugin)
+  set(${CLP}_SOURCE ${CLP}.cxx)
+  generateclp(${CLP}_SOURCE ${CLP}.xml)
+  add_executable(${CLP} ${${CLP}_SOURCE})
+  target_link_libraries(${CLP} ITKCommon ITKIO ITKBasicFilters ITKNumerics ITKAlgorithms)
+
+endif(CLILIBRARIES_DIR)
+
+
+Enjoy,
+
+Luca Antiga, PhD
+Principal Scientist, Orobix Srl
+luca.antiga@orobix.com
+
